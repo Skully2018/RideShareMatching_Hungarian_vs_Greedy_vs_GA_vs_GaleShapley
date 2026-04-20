@@ -1,6 +1,3 @@
-from textwrap import dedent
-
-code = dedent(r'''
 from __future__ import annotations
 
 import csv
@@ -712,11 +709,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    print("Program started")
     main()
-''')
-
-path = "/mnt/data/rideshare_matching_project.py"
-with open(path, "w", encoding="utf-8") as f:
-    f.write(code)
-
-print(f"Created {path}")
+    print("Program finished")
