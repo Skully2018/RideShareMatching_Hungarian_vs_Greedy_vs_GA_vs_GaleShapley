@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+import os
 import csv
 import math
 import random
@@ -596,7 +595,7 @@ def run_experiments(
                 num_drivers=size,
                 num_riders=size,
                 max_pickup_distance=max_pickup_distance,
-                seed=size * 10_000 + trial,
+                seed=None,
             )
 
             results: Dict[str, MatchingResult] = {}
@@ -626,9 +625,9 @@ def run_experiments(
 
 
 def print_single_run_summary(results: Sequence[MatchingResult]) -> None:
-    print("\n=== Single Run Summary ===")
+    print("\\n=== Single Run Summary ===")
     for result in results:
-        print(f"\nAlgorithm: {result.algorithm}")
+        print(f"\\nAlgorithm: {result.algorithm}")
         print(f"Runtime: {result.runtime_seconds:.6f} seconds")
         print(f"Matches: {len(result.matches)}")
         print(f"Total score: {result.total_score:.2f}")
@@ -646,7 +645,7 @@ def print_single_run_summary(results: Sequence[MatchingResult]) -> None:
 
 
 def print_experiment_summary(rows: Sequence[Dict[str, float]]) -> None:
-    print("\n=== Experiment Summary ===")
+    print("\\n=== Experiment Summary ===")
     grouped: Dict[Tuple[int, str], List[Dict[str, float]]] = {}
     for row in rows:
         key = (int(row["size"]), str(row["algorithm"]))
@@ -669,7 +668,7 @@ def main() -> None:
         num_drivers=10,
         num_riders=10,
         max_pickup_distance=30.0,
-        seed=42,
+        seed=None,
     )
 
     single_results = [
@@ -684,11 +683,15 @@ def main() -> None:
                 "generations": 100,
                 "mutation_rate": 0.08,
                 "elite_count": 5,
-                "seed": 42,
+                "seed": None,
             },
         ),
     ]
     print_single_run_summary(single_results)
+
+    results_dir = os.path.join(os.getcwd(), "..", "Results")
+    os.makedirs(results_dir, exist_ok=True)
+    csv_path = os.path.join(results_dir, "rideshare_results.csv")
 
     rows = run_experiments(
         sizes=(50, 100, 150),
@@ -700,12 +703,14 @@ def main() -> None:
             "generations": 100,
             "mutation_rate": 0.08,
             "elite_count": 5,
-            "seed": 123,
+            "seed": None,
         },
-        csv_filename="rideshare_results.csv",
+        csv_filename=csv_path,
     )
+
+    print(f"\\nResults saved to: {csv_path}")
     print_experiment_summary(rows)
-    print("\nSaved experiment results to rideshare_results.csv")
+    print("\\nSaved experiment results to rideshare_results.csv")
 
 
 if __name__ == "__main__":
