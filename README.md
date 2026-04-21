@@ -34,14 +34,15 @@ This project uses Python 3. Install any required dependencies before running the
 
 ### Clone the Repository
 ```bash
-git clone <repo-url>
-cd <repo-name>
+git clone https://github.com/Skully2018/RideShareMatching_Hungarian_vs_Greedy_vs_GA_vs_GaleShapley
+cd /RideShareMatching_Hungarian_vs_Greedy_vs_GA_vs_GaleShapley
 ```
 
 ### Run the Project
 ```bash
 cd code
 python main.py
+python plot_results.py
 ```
 
 ### Output
