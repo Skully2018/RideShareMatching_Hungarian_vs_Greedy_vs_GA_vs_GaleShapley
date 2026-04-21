@@ -5,31 +5,47 @@
 - Michael Lamberth
 
 ## Project Overview
-This project studies the ride-share matching problem by modeling drivers and riders as a weighted bipartite graph. We implement and compare the Hungarian Algorithm, Greedy Matching, Gale–Shapley Stable Matching, and a Genetic Algorithm to evaluate trade-offs in runtime, solution quality, and scalability.
+This project investigates the ride-share matching problem by modeling drivers and riders as a weighted bipartite graph. The goal is to match available drivers with riders as efficiently as possible while comparing the performance of four algorithmic approaches: the Hungarian Algorithm, Greedy Matching, Gale–Shapley Stable Matching, and a Genetic Algorithm. These methods are evaluated based on runtime, number of matches, and overall solution quality.
 
 ## Problem Description
-In a ride-share system, available drivers must be matched to riders efficiently. Each feasible driver-rider pair is assigned a score based on factors such as pickup distance, wait time, and overall trip quality. The project compares exact, heuristic, stable, and nature-inspired methods for solving this matching problem.
+In a ride-share system, drivers and riders must be paired in a way that balances efficiency and service quality. Each feasible driver-rider pair is assigned a score based on factors such as pickup distance, wait time, and overall trip quality. This project compares exact, heuristic, stability-based, and evolutionary optimization methods for solving this problem and studies the trade-offs among them.
 
 ## Algorithms Implemented
-- **Hungarian Algorithm** — exact weighted bipartite matching benchmark
-- **Greedy Matching** — fast heuristic based on best available local choice
-- **Gale–Shapley Stable Matching** — stability-focused matching using preference lists
-- **Genetic Algorithm** — nature-inspired optimization with population-based search
+- **Hungarian Algorithm** — an exact weighted bipartite matching method used as a benchmark for solution quality
+- **Greedy Matching** — a fast heuristic that repeatedly selects the best available local match
+- **Gale–Shapley Stable Matching** — a stability-focused matching method based on ranked preference lists
+- **Genetic Algorithm** — a population-based optimization method inspired by natural selection
 
 ## Datasets
-This project primarily uses synthetic ride-share instances generated from realistic transportation patterns. Real-world inspired trip distributions may be incorporated to create more realistic matching scenarios.
+This project primarily uses synthetic ride-share instances generated to reflect realistic transportation and trip-demand patterns. These datasets allow controlled comparisons across different problem sizes and help evaluate the scalability and effectiveness of each matching approach.
 
 ## Repository Structure
-- `code/` - algorithm implementations and experiment scripts  
-- `results/` - raw experiment outputs  
-- `graphs/` - generated plots and visualizations  
-- `report/` - final scientific report  
-- `slides/` - project presentation materials  
-- `references/` - papers and supporting sources   
+- `code/` - algorithm implementations and experiment scripts
+- `results/` - raw experiment outputs
+- `graphs/` - generated plots and visualizations
+- `report/` - final scientific report
+- `slides/` - project presentation materials
+- `references/` - papers and supporting sources
 
 ## How to Run
 
-### Clone the repository
+### Requirements
+This project uses Python 3. Install any required dependencies before running the code.
+
+### Clone the Repository
 ```bash
 git clone <repo-url>
 cd <repo-name>
+```
+
+### Run the Project
+```bash
+cd code
+python main.py
+```
+
+### Output
+The experiment scripts generate results for comparing the four algorithms, including metrics such as runtime, number of matches, and solution quality. Output files should be saved in the `results/` folder, and any generated graphs should be saved in the `graphs/` folder.
+
+## GenAI Usage Disclosure
+Generative AI tools were used to assist with brainstorming, debugging, code organization, and drafting parts of the project documentation. All final implementation decisions, testing, and submitted materials were reviewed and verified by the project team.
