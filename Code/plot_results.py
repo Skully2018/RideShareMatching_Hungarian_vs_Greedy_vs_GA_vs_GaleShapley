@@ -1,3 +1,21 @@
+"""
+Visualization script for ride-matching experiments.
+
+This script:
+- Loads experiment results from CSV
+- Aggregates metrics by (problem size, algorithm)
+- Generates comparison plots for:
+    - Runtime
+    - Total score
+    - Match count
+    - Solution quality vs Hungarian
+    - Stability violations
+
+Purpose:
+To visually compare algorithm performance and highlight tradeoffs
+as problem size scales.
+"""
+
 import os
 import csv
 from collections import defaultdict

@@ -1,3 +1,28 @@
+"""
+Ride-Sharing Matching Simulation Framework
+
+This program models and compares multiple matching algorithms for pairing drivers
+and riders in a ride-sharing system. The goal is to evaluate tradeoffs between:
+
+- Optimality (Hungarian algorithm)
+- Speed (Greedy)
+- Stability (Gale-Shapley)
+- Heuristic exploration (Genetic Algorithm)
+
+Each algorithm operates on the same generated instance and is evaluated using:
+- Total matching score (based on pickup distance)
+- Average pickup distance
+- Runtime
+- Stability violations (for stable matching context)
+
+Design Philosophy:
+- Separate instance generation, algorithms, and evaluation
+- Ensure fair comparison using a shared scoring function
+- Use Hungarian algorithm as a ground-truth benchmark
+
+This structure allows experimentation with algorithmic tradeoffs at scale.
+"""
+
 import os
 import csv
 import math
@@ -61,6 +86,23 @@ NEG_INF = -10**15
 def euclidean_distance(a: Point, b: Point) -> float:
     return math.hypot(a.x - b.x, a.y - b.y)
 
+"""
+Scoring function for a driver-rider match.
+
+We use a simple linear decay model:
+    score = max(0, 1000 - distance)
+
+Interpretation:
+- Shorter pickup distance → higher reward
+- Beyond 1000 units → zero reward
+
+This is a simplification of real-world objectives where:
+- Time, fuel cost, and rider satisfaction are correlated with distance
+
+NOTE:
+Changing this function directly changes the optimization objective
+for *all* algorithms.
+"""
 
 def compute_score(distance: float) -> float:
     return max(0.0, 1000.0 - distance)
@@ -92,6 +134,23 @@ def timed_call(func: Callable, *args, **kwargs):
     end = time.perf_counter()
     return result, end - start
 
+"""
+Generate a synthetic ride-matching instance.
+
+Drivers and riders are placed randomly in a 2D plane. We precompute:
+
+- distance_matrix: Euclidean distance between each driver-rider pair
+- score_matrix: Reward function based on distance (closer = higher score)
+- feasible_matrix: Whether a match is allowed (within max pickup distance)
+
+IMPORTANT:
+We convert infeasible edges into NEG_INF scores so that:
+- Greedy and GA naturally avoid them
+- Hungarian can treat them as very costly
+
+This function defines the *entire problem space*, so consistency here
+is critical for fair algorithm comparison.
+"""
 
 def generate_random_instance(
     num_drivers: int,
@@ -139,6 +198,23 @@ def generate_random_instance(
         max_pickup_distance=max_pickup_distance,
     )
 
+"""
+Greedy matching algorithm.
+
+Approach:
+1. Sort all feasible edges by (highest score, then shortest distance)
+2. Iteratively select the best available edge
+3. Ensure each driver and rider is matched at most once
+
+Properties:
+- Fast: O(E log E)
+- Simple to implement
+- Myopic: makes locally optimal decisions
+
+Limitation:
+Greedy does NOT guarantee a globally optimal solution and may perform
+significantly worse than Hungarian in dense graphs.
+"""
 
 def greedy_matching(instance: Instance) -> List[Match]:
     edges = []
@@ -192,6 +268,21 @@ def build_preferences(instance: Instance) -> Tuple[List[List[int]], List[List[in
     return driver_prefs, rider_prefs, rider_rank_maps
 
 
+"""
+Count the number of stability violations in a matching.
+
+A violation occurs when:
+- A driver prefers another rider over their assigned one
+- AND that rider prefers this driver over their current match
+
+Interpretation:
+- 0 violations → stable matching
+- Higher values → less stable
+
+This metric allows us to quantify how "unstable" greedy or Hungarian
+solutions are compared to Gale-Shapley.
+"""
+
 def count_stability_violations(instance: Instance, matches: Sequence[Match]) -> int:
     driver_prefs, _, rider_rank_maps = build_preferences(instance)
 
@@ -216,6 +307,26 @@ def count_stability_violations(instance: Instance, matches: Sequence[Match]) -> 
 
     return violations
 
+
+"""
+Gale-Shapley stable matching algorithm (driver-proposing version).
+
+Goal:
+Find a stable matching where no driver-rider pair would prefer each other
+over their assigned partners.
+
+Key concept:
+A "blocking pair" exists if:
+- Driver prefers a different rider
+- AND that rider prefers that driver over their current match
+
+Properties:
+- Guarantees stability
+- Not guaranteed to maximize total score
+- Produces driver-optimal stable matching
+
+This is included to compare stability vs efficiency tradeoffs.
+"""
 
 def gale_shapley_matching(instance: Instance) -> Tuple[List[Match], int]:
     driver_prefs, _, rider_rank_maps = build_preferences(instance)
@@ -319,6 +430,27 @@ def hungarian_algorithm(cost: List[List[float]]) -> Tuple[List[int], float]:
     optimal_cost = -v[0]
     return assignment, optimal_cost
 
+
+"""
+Hungarian algorithm for optimal bipartite matching.
+
+Goal:
+Maximize total matching score by converting the problem into a
+minimum-cost assignment problem.
+
+Approach:
+- Convert scores to costs: cost = max_score - score
+- Pad matrix to square if needed
+- Solve using Hungarian algorithm
+
+Properties:
+- Finds globally optimal solution
+- Polynomial time: O(n^3)
+- Serves as the benchmark for solution quality
+
+Note:
+We must carefully handle infeasible edges to avoid invalid matches.
+"""
 
 def hungarian_matching(instance: Instance) -> List[Match]:
     n = len(instance.drivers)
@@ -485,6 +617,32 @@ def mutate(individual: List[int], mutation_rate: float, num_riders: int, rng: ra
 
     return repair_individual(child, num_riders, rng)
 
+"""
+Genetic Algorithm for approximate matching.
+
+Each individual represents a mapping:
+    driver_i → rider_j
+
+Evolution process:
+1. Initialize random population
+2. Evaluate fitness (total score with penalties)
+3. Select parents (tournament selection)
+4. Apply crossover and mutation
+5. Repair invalid individuals (duplicate riders)
+6. Repeat for multiple generations
+
+Properties:
+- Heuristic, not guaranteed optimal
+- Can explore large search spaces
+- Performance depends heavily on fitness design
+
+Key challenge:
+Balancing penalties and rewards so that:
+- Invalid solutions are discouraged
+- Good structures are preserved
+
+This algorithm explores tradeoffs between exploration and exploitation.
+"""
 
 def genetic_matching(
     instance: Instance,
@@ -578,6 +736,25 @@ def result_to_row(size: int, trial: int, result: MatchingResult, benchmark_score
         row.update(result.metadata)
     return row
 
+"""
+Run experiments across multiple problem sizes and trials.
+
+For each size:
+- Generate random instances
+- Run all algorithms
+- Compare results against Hungarian baseline
+
+Metrics recorded:
+- Runtime
+- Total score
+- Number of matches
+- Solution quality vs optimal
+- Stability violations
+
+Results are saved to CSV for later analysis and visualization.
+
+This function is the core of the empirical evaluation pipeline.
+"""
 
 def run_experiments(
     sizes: Sequence[int] = (50, 100, 250),
